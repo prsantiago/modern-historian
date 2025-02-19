@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  timescaledb:
+    image: timescale/timescaledb-ha:pg17
+    container_name: timescaledb
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./timescale_setup/data:/var/lib/postgresql/data
+      # - ./timescale_setup/data:/tmp/timescale_setup/data
+
+  grafana:
+    image: grafana/grafana-enterprise
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana_setup/data:/var/lib/grafana
+    depends_on:
+      - timescaledb
+
+  metabase:
+    image: metabase/metabase
+    container_name: metabase
+    restart: unless-stopped
+    ports:
+      - "12345:3000"
+    volumes:
+      - ./metabase_setup/data:/var/lib/metabase
+    depends_on:
+      - timescaledb
+# volumes:
+#   grafana-storage: {}
+#   db_data: {}
+#   metabase-storage: {}

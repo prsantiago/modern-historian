@@ -67,7 +67,7 @@ services:
     volumes:
       - type: volume
         source: timescaledb-data
-        target: /var/lib/postgresql/data
+        target: /home/postgres/pgdata/data
 
     networks:
       - historian-net
@@ -83,9 +83,6 @@ services:
       - type: volume
         source: grafana-data
         target: /var/lib/grafana
-
-    depends_on:
-      - timescaledb
 
     networks:
       - historian-net
@@ -104,9 +101,6 @@ services:
 
     environment:
       - MB_DB_FILE=/var/lib/metabase/metabase.db
-
-    depends_on:
-      - timescaledb
 
     networks:
       - historian-net

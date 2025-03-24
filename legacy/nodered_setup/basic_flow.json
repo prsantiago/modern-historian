@@ -1,0 +1,175 @@
+[
+    {
+        "id": "f6f2187d.f17ca8",
+        "type": "tab",
+        "label": "gemini_approach",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "6283ef31dd1bea18",
+        "type": "inject",
+        "z": "f6f2187d.f17ca8",
+        "name": "temperatura",
+        "props": [
+            {
+                "p": "payload.timestamp",
+                "v": "",
+                "vt": "date"
+            },
+            {
+                "p": "topic.name",
+                "v": "fan_1",
+                "vt": "str"
+            },
+            {
+                "p": "topic.id",
+                "v": "uuid1",
+                "vt": "str"
+            },
+            {
+                "p": "measurement",
+                "v": "plc_data",
+                "vt": "str"
+            }
+        ],
+        "repeat": "10",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 180,
+        "y": 200,
+        "wires": [
+            [
+                "695c18451390d4c5"
+            ]
+        ]
+    },
+    {
+        "id": "4699f82150d8f4b8",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "debug",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 630,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "695c18451390d4c5",
+        "type": "change",
+        "z": "f6f2187d.f17ca8",
+        "name": "set_temp-hum",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload.temperatura",
+                "pt": "msg",
+                "to": "$random()*100",
+                "tot": "jsonata"
+            },
+            {
+                "t": "set",
+                "p": "payload.humedad",
+                "pt": "msg",
+                "to": "$random()*100",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 420,
+        "y": 200,
+        "wires": [
+            [
+                "ea3065251ab0ccd9",
+                "4699f82150d8f4b8",
+                "4eacbb1750a40b83"
+            ]
+        ]
+    },
+    {
+        "id": "ea3065251ab0ccd9",
+        "type": "postgresql",
+        "z": "f6f2187d.f17ca8",
+        "name": "Escribir a mediciones_motor tdb",
+        "query": "INSERT INTO mediciones_motor (tiempo, temperatura, humedad) VALUES (to_timestamp({{{msg.payload.timestamp}}} / 1000.0), {{{msg.payload.temperatura}}}, {{{msg.payload.humedad}}});",
+        "postgreSQLConfig": "bbb986e622941ccf",
+        "split": true,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 710,
+        "y": 260,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "4eacbb1750a40b83",
+        "type": "influxdb out",
+        "z": "f6f2187d.f17ca8",
+        "influxdb": "influxdb-conn",
+        "name": "Escribir a mediciones_motor idb",
+        "measurement": "plc_data",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "docs",
+        "bucket": "mediciones_motor",
+        "x": 710,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "bbb986e622941ccf",
+        "type": "postgreSQLConfig",
+        "name": "TimescaleDB",
+        "host": "timescaledb",
+        "hostFieldType": "str",
+        "port": 5432,
+        "portFieldType": "num",
+        "database": "postgres",
+        "databaseFieldType": "str",
+        "ssl": "false",
+        "sslFieldType": "bool",
+        "applicationName": "",
+        "applicationNameType": "str",
+        "max": 10,
+        "maxFieldType": "num",
+        "idle": 1000,
+        "idleFieldType": "num",
+        "connectionTimeout": "15000",
+        "connectionTimeoutFieldType": "num",
+        "user": "postgres",
+        "userFieldType": "str",
+        "password": "password",
+        "passwordFieldType": "str"
+    },
+    {
+        "id": "influxdb-conn",
+        "type": "influxdb",
+        "hostname": "",
+        "port": "",
+        "database": "",
+        "name": "InfluxDB",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": "http://influxdb2:8086",
+        "timeout": "",
+        "rejectUnauthorized": true
+    }
+]

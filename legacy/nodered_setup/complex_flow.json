@@ -1,0 +1,169 @@
+[
+    {
+        "id": "simulator-flow",
+        "type": "tab",
+        "label": "claude_approach",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "inject-timer",
+        "type": "inject",
+        "z": "simulator-flow",
+        "name": "Generar cada 10 segundos",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "10",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "1",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 200,
+        "y": 200,
+        "wires": [
+            [
+                "generate-dummy-data"
+            ]
+        ]
+    },
+    {
+        "id": "generate-dummy-data",
+        "type": "function",
+        "z": "simulator-flow",
+        "name": "Generar datos dummy de PLC",
+        "func": "// Definir los tags que queremos simular\nconst tags = [\n    {id: 'TT101', name: 'Temperatura Tanque 1', min: 20, max: 80, unit: '°C'},\n    {id: 'PT101', name: 'Presión Tanque 1', min: 1, max: 5, unit: 'bar'},\n    {id: 'FT101', name: 'Flujo Línea 1', min: 0, max: 100, unit: 'm³/h'},\n    {id: 'LT101', name: 'Nivel Tanque 1', min: 0, max: 100, unit: '%'},\n    {id: 'TT201', name: 'Temperatura Tanque 2', min: 20, max: 90, unit: '°C'},\n    {id: 'PT201', name: 'Presión Tanque 2', min: 1, max: 6, unit: 'bar'},\n    {id: 'VB101', name: 'Vibración Bomba 1', min: 0, max: 10, unit: 'mm/s'},\n    {id: 'ST101', name: 'Velocidad Motor 1', min: 0, max: 1800, unit: 'RPM'}\n];\n\n// Generar valores aleatorios para cada tag\nconst timestamp = new Date();\nconst readingTime = timestamp.toISOString();\n\nlet readings = [];\nlet messages = [];\n\nfor (let tag of tags) {\n    // Generar un valor aleatorio dentro del rango definido\n    const randomValue = tag.min + (Math.random() * (tag.max - tag.min));\n    const value = parseFloat(randomValue.toFixed(2));\n    \n    // Generar un valor de calidad (0-100, donde 100 es perfecto)\n    const quality = Math.random() > 0.05 ? 100 : Math.floor(Math.random() * 50);\n    \n    // Crear una lectura\n    const reading = {\n        tag_id: tag.id,\n        tag_name: tag.name,\n        value: value,\n        unit: tag.unit,\n        quality: quality,\n        timestamp: readingTime\n    };\n    \n    readings.push(reading);\n    \n    // Crear mensajes individuales para cada tag (útil para InfluxDB)\n    let msg = {\n        payload: {\n            tag_id: tag.id,\n            tag_name: tag.name,\n            unit: tag.unit,\n            value: value,\n            quality: quality,        \n            timestamp: readingTime\n        },\n        measurement: tag.id,\n        topic: tag.id\n    };\n    messages.push(msg);\n}\n\n// Mensaje para TimescaleDB (todos los datos juntos)\nlet timescaleMsg = {\n    payload: readings,\n    topic: \"batch_readings\"\n};\n\n// Pasar los datos a las salidas\nreturn [timescaleMsg, messages];\n",
+        "outputs": 2,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 490,
+        "y": 200,
+        "wires": [
+            [
+                "debug-timescale"
+            ],
+            [
+                "debug-influx",
+                "influx-write"
+            ]
+        ]
+    },
+    {
+        "id": "debug-timescale",
+        "type": "debug",
+        "z": "simulator-flow",
+        "name": "TimescaleDB Data",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 790,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "debug-influx",
+        "type": "debug",
+        "z": "simulator-flow",
+        "name": "InfluxDB Data",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 780,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "timescale-insert",
+        "type": "postgresql",
+        "z": "simulator-flow",
+        "name": "Insertar en TimescaleDB",
+        "query": "INSERT INTO sensor_data (time, tag_id, tag_name, value, unit, quality) VALUES\n{{#each msg.payload}}\n  ( '{{this.timestamp}}', '{{this.tag_id}}', '{{this.tag_name}}', {{this.value}}, '{{this.unit}}', {{this.quality}} ){{#unless @last}},{{/unless}}\n{{/each}};",
+        "postgreSQLConfig": "bbb986e622941ccf",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 810,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "influx-write",
+        "type": "influxdb out",
+        "z": "simulator-flow",
+        "influxdb": "influxdb-conn",
+        "name": "Escribir en InfluxDB",
+        "measurement": "plc_data",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "docs",
+        "bucket": "home",
+        "x": 790,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "bbb986e622941ccf",
+        "type": "postgreSQLConfig",
+        "name": "TimescaleDB",
+        "host": "timescaledb",
+        "hostFieldType": "str",
+        "port": 5432,
+        "portFieldType": "num",
+        "database": "postgres",
+        "databaseFieldType": "str",
+        "ssl": "false",
+        "sslFieldType": "bool",
+        "applicationName": "",
+        "applicationNameType": "str",
+        "max": 10,
+        "maxFieldType": "num",
+        "idle": 1000,
+        "idleFieldType": "num",
+        "connectionTimeout": "15000",
+        "connectionTimeoutFieldType": "num",
+        "user": "postgres",
+        "userFieldType": "str",
+        "password": "password",
+        "passwordFieldType": "str"
+    },
+    {
+        "id": "influxdb-conn",
+        "type": "influxdb",
+        "hostname": "",
+        "port": "",
+        "database": "",
+        "name": "InfluxDB",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": "http://influxdb2:8086",
+        "timeout": "",
+        "rejectUnauthorized": true
+    }
+]

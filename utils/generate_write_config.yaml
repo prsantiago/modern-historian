@@ -1,0 +1,43 @@
+# Configuración de InfluxDB (opcional, valores por defecto si no se especifican)
+org: "planta_tecate"
+url: "http://localhost:8086"
+bucket: "home"
+
+# Número de registros a generar
+num_registros: 100
+
+# Intervalo entre registros en segundos
+intervalo_segundos: 10
+
+# Timestamp de inicio (en segundos)
+timestamp_inicio: 1742929212
+
+# Definición de mediciones
+mediciones:
+  - measurement: FT010205
+    unidad: filtro_2
+    maquina: filtro
+    subarea: filtracion
+    pv:
+      min: 0.0
+      max: 100.0
+    sp:
+      min: 0.0
+      max: 100.0
+    cv:
+      min: 0
+      max: 3
+
+  - measurement: PT010205
+    unidad: tanque_1
+    maquina: reactor
+    subarea: proceso
+    pv:
+      min: 1.0
+      max: 10.0
+    sp:
+      min: 1.0
+      max: 10.0
+    cv:
+      min: 0
+      max: 3

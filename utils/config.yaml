@@ -1,0 +1,39 @@
+# config.yml
+
+# Número de registros a generar
+num_registros: 1000
+
+# Intervalo de tiempo entre registros en segundos
+intervalo_segundos: 15
+
+# Timestamp de inicio en segundos desde epoch
+timestamp_inicio: 1742916600
+
+# Definición de las mediciones y sus parámetros
+mediciones:
+  - measurement: FT010205
+    unidad: filtro_2
+    maquina: bomba
+    subarea: proceso
+    pv:
+      min: 20.0
+      max: 30.0
+    sp:
+      min: 35.0
+      max: 40.0
+    cv:
+      min: 1
+      max: 10
+  - measurement: FT010206
+    unidad: filtro_3
+    maquina: reactor
+    subarea: filtracion
+    pv:
+      min: 25.0
+      max: 35.0
+    sp:
+      min: 38.0
+      max: 42.0
+    cv:
+      min: 2
+      max: 12

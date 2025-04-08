@@ -2,14 +2,12 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# Install required packages
-COPY requirements.txt .
+# Copy and install required packages
+COPY . .
 RUN pip install -r requirements.txt
 
-# Copy application files
-COPY generate_dummy_data_write_2_influxdb.py .
-COPY config.yaml .
-COPY env/.env.influx .env
+# Use bash instead of sh
+SHELL ["/bin/bash", "-c"]
 
 # Run the script with env file
-CMD ["sh", "-c", "source ./.env && python generate_dummy_data_write_2_influxdb.py"]
+CMD ["bash", "-c", "set -a && . ./env/.env.influx && set +a && python generate_dummy_data_write_2_influxdb.py"]

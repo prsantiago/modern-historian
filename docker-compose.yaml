@@ -7,17 +7,6 @@ services:
     ports:
       - 8086:8086
 
-    environment:
-      DOCKER_INFLUXDB_INIT_MODE: setup
-      DOCKER_INFLUXDB_INIT_USERNAME_FILE: /run/secrets/influxdb2-admin-username
-      DOCKER_INFLUXDB_INIT_PASSWORD_FILE: /run/secrets/influxdb2-admin-password
-      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN_FILE: /run/secrets/influxdb2-admin-token
-
-    secrets:
-      - influxdb2-admin-username
-      - influxdb2-admin-password
-      - influxdb2-admin-token
-
     volumes:
       - type: volume
         source: influxdb2-data
@@ -29,9 +18,34 @@ services:
     networks:
       - historian-net
 
+  grafana:
+    image: grafana/grafana-enterprise
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+    networks:
+      - historian-net
+
+  data-generator:
+    build: 
+      context: ./data_generator
+      dockerfile: Dockerfile
+    container_name: data-generator
+    restart: unless-stopped
+    depends_on:
+      - influxdb2
+    networks:
+      - historian-net
+
 volumes:
   influxdb2-config:
   influxdb2-data:
+  grafana-storage:
 
 networks:
   historian-net:

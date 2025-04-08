@@ -9,6 +9,7 @@ RUN pip install -r requirements.txt
 # Copy application files
 COPY generate_dummy_data_write_2_influxdb.py .
 COPY config.yaml .
+COPY env/.env.influx .env
 
-# Run the script
-CMD ["python", "generate_dummy_data_write_2_influxdb.py", "config.yaml"]
+# Run the script with env file
+CMD ["sh", "-c", "source ./.env && python generate_dummy_data_write_2_influxdb.py"]

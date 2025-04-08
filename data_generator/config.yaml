@@ -1,8 +1,3 @@
-org: "docs"
-url: "http://influxdb2:8086"
-bucket: "home"
-token: "rZ0XSm-wXz8NfmGxFd63slG9ql1_zTTrZJQ3f01zruHSizXQJKApAhW5J5I7eLfB8OhuIvKnlS9ltvVLjQGgLg=="
-
 num_registros: -1  # -1 means run indefinitely
 intervalo_segundos: 5
 

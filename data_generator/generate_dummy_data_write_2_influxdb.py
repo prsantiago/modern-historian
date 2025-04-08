@@ -18,10 +18,10 @@ def generar_valor(min_val, max_val, es_entero=False):
 
 def escribir_a_influxdb(config):
     """Genera y escribe datos a InfluxDB basados en la configuración."""
-    token = config.get('token')
-    org = config.get('org', 'docs')
-    url = config.get('url', 'http://influxdb2:8086')
-    bucket = config.get('bucket', 'home')
+    token = os.getenv('INFLUXDB_TOKEN')
+    org = os.getenv('INFLUXDB_ORG')
+    url = os.getenv('INFLUXDB_URL')
+    bucket = os.getenv('INFLUXDB_BUCKET')
 
     # Crear cliente de escritura
     write_client = InfluxDBClient(url=url, token=token, org=org)

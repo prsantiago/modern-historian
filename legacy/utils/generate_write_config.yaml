@@ -1,16 +1,17 @@
 # Configuración de InfluxDB (opcional, valores por defecto si no se especifican)
 org: "planta_tecate"
 url: "http://localhost:8086"
-bucket: "home"
+bucket: "area_elaboracion"
+token: ""
 
 # Número de registros a generar
-num_registros: 100
+num_registros: 1000
 
 # Intervalo entre registros en segundos
-intervalo_segundos: 10
+intervalo_segundos: 1
 
 # Timestamp de inicio (en segundos)
-timestamp_inicio: 1742929212
+timestamp_inicio: 1744120800
 
 # Definición de mediciones
 mediciones:

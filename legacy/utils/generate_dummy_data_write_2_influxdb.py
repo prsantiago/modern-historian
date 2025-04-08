@@ -26,7 +26,7 @@ def escribir_a_influxdb(config):
     :param config: Diccionario de configuración
     """
     # Configuración de InfluxDB
-    token = os.getenv('INFLUXDB_TOKEN')
+    token = config.get('token', os.environ.get('INFLUXDB_TOKEN'))
     org = config.get('org', 'planta_tecate')
     url = config.get('url', 'http://localhost:8086')
     bucket = config.get('bucket', 'home')

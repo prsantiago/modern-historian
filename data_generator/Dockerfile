@@ -10,4 +10,4 @@ RUN pip install -r requirements.txt
 SHELL ["/bin/bash", "-c"]
 
 # Run the script with env file
-CMD ["bash", "-c", "set -a && . ./env/.env.influx && set +a && python generate_dummy_data_write_2_influxdb.py"]
+CMD ["bash", "-c", "set -a && . ./env/.env && set +a && python generate_dummy_data_write_2_influxdb.py"]

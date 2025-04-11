@@ -48,36 +48,54 @@ def generate_value(min_val, max_val, is_integer=False):
     value = random.randint(min_val, max_val) if is_integer else random.uniform(min_val, max_val)
     return value
 
-def write_to_influxdb(config):
-    """
-    Generate and write data to InfluxDB based on configuration.
-    
-    Args:
-        config (dict): Configuration parameters
-    """
+def init_influxdb_client():
+    """Initialize and return InfluxDB client"""
     token = os.getenv('INFLUXDB_TOKEN')
     org = os.getenv('INFLUXDB_ORG')
     url = os.getenv('INFLUXDB_URL')
-    bucket = os.getenv('INFLUXDB_BUCKET')
 
     logger.info(f"Connecting to InfluxDB at {url}")
-    logger.debug(f"Using organization: {org}, bucket: {bucket}")
-
-    # Create write client
     try:
-        write_client = InfluxDBClient(url=url, token=token, org=org)
-        write_api = write_client.write_api(write_options=SYNCHRONOUS)
+        client = InfluxDBClient(url=url, token=token, org=org)
         logger.info("Successfully connected to InfluxDB")
+        return client
     except Exception as e:
         logger.error(f"Failed to connect to InfluxDB: {str(e)}")
         raise
+
+def init_questdb_client():
+    """Initialize and return QuestDB client using InfluxDB API"""
+    url = os.getenv('QUESTDB_URL')
+    logger.info(f"Connecting to QuestDB at {url}")
+    try:
+        client = InfluxDBClient(url=url, token='', org='')
+        logger.info("Successfully connected to QuestDB")
+        return client
+    except Exception as e:
+        logger.error(f"Failed to connect to QuestDB: {str(e)}")
+        raise
+
+def write_to_databases(influx_client, quest_client, config):
+    """
+    Generate and write data to both InfluxDB and QuestDB.
+    
+    Args:
+        influx_client: InfluxDB client
+        quest_client: QuestDB client
+        config (dict): Configuration parameters
+    """
+    influx_bucket = os.getenv('INFLUXDB_BUCKET')
+    quest_bucket = os.getenv('QUESTDB_DB')
+
+    # Create write APIs
+    influx_write_api = influx_client.write_api(write_options=SYNCHRONOUS)
+    quest_write_api = quest_client.write_api(write_options=SYNCHRONOUS)
 
     num_records = config['num_registros']
     interval_seconds = config['intervalo_segundos']
     counter = 0
 
-    logger.info(f"Starting data generation. Records to generate: {'infinite' if num_records == -1 else num_records}")
-    logger.info(f"Data generation interval: {interval_seconds} seconds")
+    logger.info(f"Starting data generation for both databases. Records to generate: {'infinite' if num_records == -1 else num_records}")
 
     try:
         while num_records == -1 or counter < num_records:
@@ -89,7 +107,7 @@ def write_to_influxdb(config):
                 sp = generate_value(measurement['sp']['min'], measurement['sp']['max'])
                 cv = generate_value(measurement['cv']['min'], measurement['cv']['max'], is_integer=True)
 
-                # Create point
+                # Create point once
                 point = (
                     Point(measurement['measurement'])
                     .tag("unit", measurement['unidad'])
@@ -102,9 +120,12 @@ def write_to_influxdb(config):
                 )
 
                 try:
-                    write_api.write(bucket=bucket, record=point)
+                    # Write to InfluxDB
+                    influx_write_api.write(bucket=influx_bucket, record=point)
+                    # Write to QuestDB
+                    quest_write_api.write(bucket=quest_bucket, record=point)
                     logger.info(
-                        f"Written: {measurement['measurement']} - "
+                        f"Written to both DBs: {measurement['measurement']} - "
                         f"Machine: {measurement['maquina']} - "
                         f"PV: {pv:.2f}, SP: {sp:.2f}, CV: {cv}"
                     )
@@ -121,17 +142,20 @@ def write_to_influxdb(config):
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
     finally:
-        write_client.close()
-        logger.info("Connection closed")
+        influx_client.close()
+        quest_client.close()
+        logger.info("Connections closed")
 
 def main():
     logger.info("Starting data generator application")
-    logger.info("Waiting for InfluxDB to be ready...")
+    logger.info("Waiting for databases to be ready...")
     time.sleep(10)
     
     try:
         config = load_configuration('config.yaml')
-        write_to_influxdb(config)
+        influx_client = init_influxdb_client()
+        quest_client = init_questdb_client()
+        write_to_databases(influx_client, quest_client, config)
     except Exception as e:
         logger.error(f"Application failed: {str(e)}")
         exit(1)

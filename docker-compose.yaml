@@ -19,7 +19,7 @@ services:
       - historian-net
 
   grafana:
-    image: grafana/grafana-enterprise
+    image: grafana/grafana-oss
     container_name: grafana
     restart: unless-stopped
     ports:
@@ -42,10 +42,25 @@ services:
     networks:
       - historian-net
 
+  questdb:
+    image: questdb/questdb:8.2.3
+    container_name: questdb
+    restart: unless-stopped
+    ports:
+      - 9000:9000
+      - 9009:9009
+      - 8812:8812
+      - 9003:9003
+    volumes:
+      - questdb-data:/var/lib/questdb
+    networks:
+      - historian-net
+
 volumes:
   influxdb2-config:
   influxdb2-data:
   grafana-storage:
+  questdb-data:
 
 networks:
   historian-net:
